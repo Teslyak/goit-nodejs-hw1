@@ -1,23 +1,48 @@
-// contacts.js
+import fs from "fs/promises";
+import { nanoid } from "nanoid";
+import path from "path";
 
-/*
- * Розкоментуй і запиши значення
- * const contactsPath = ;
- */
+const contactsPath = path.resolve("db", "contacts.json");
 
-// TODO: задокументувати кожну функцію
-function listContacts() {
-  // ...твій код. Повертає масив контактів.
+function updateContats(contact) {
+  const newContactsList = fs.writeFile(
+    contactsPath,
+    JSON.stringify(contact, null, 2)
+  );
+  return newContactsList;
 }
 
-function getContactById(contactId) {
-  // ...твій код. Повертає об'єкт контакту з таким id. Повертає null, якщо контакт з таким id не знайдений.
+export async function listContacts() {
+  const contactsList = await fs.readFile(contactsPath);
+  return JSON.parse(contactsList);
 }
 
-function removeContact(contactId) {
-  // ...твій код. Повертає об'єкт видаленого контакту. Повертає null, якщо контакт з таким id не знайдений.
+export async function getContactById(contactId) {
+  const contacts = await listContacts();
+  const contactSearchByID = contacts.find((e) => e.id === contactId);
+  return contactSearchByID || null;
 }
 
-function addContact(name, email, phone) {
-  // ...твій код. Повертає об'єкт доданого контакту.
+export async function removeContact(contactId) {
+  const contacts = await listContacts();
+  const index = contacts.findIndex((e) => e.id === contactId);
+  if (index === -1) {
+    return null;
+  }
+  const [contactDelByID] = contacts.splice(index, 1);
+  await updateContats(contacts);
+  return contactDelByID;
+}
+
+export async function addContact(name, email, phone) {
+  const contacts = await listContacts();
+  const newContact = {
+    id: nanoid(),
+    name,
+    email,
+    phone,
+  };
+  contacts.push(newContact);
+  await updateContats(contacts);
+  return newContact;
 }
